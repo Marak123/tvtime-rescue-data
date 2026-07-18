@@ -1,0 +1,9 @@
+# Normalize line endings so shell scripts always work on Mac and Linux.
+* text=auto eol=lf
+
+# Windows batch files must stay CRLF.
+*.bat text eol=crlf
+
+# Shell scripts must be LF everywhere, even when cloned on Windows.
+*.sh text eol=lf
+*.command text eol=lf
