@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tvtime-rescue"
+version = "1.0.0"
+description = "Recover your TV Time library and watch history from a local iOS backup (unencrypted or encrypted)."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "Marak123" }]
+keywords = ["tvtime", "tv time", "ios", "backup", "recovery", "diocache"]
+
+# Only needed for encrypted backups. Unencrypted backups use the standard library only.
+dependencies = ["iphone-backup-decrypt>=0.9.0"]
+
+[project.urls]
+Homepage = "https://github.com/Marak123/tvtime-rescue"
+Issues = "https://github.com/Marak123/tvtime-rescue/issues"
+
+[project.scripts]
+tvtime-rescue = "tvtime_rescue.cli:main"
+
+[tool.setuptools]
+packages = ["tvtime_rescue"]

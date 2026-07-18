@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# PyInstaller build output
+build/
+dist/
+*.spec
+
+# Never commit real backups or recovered personal data
+TVTime-Recovered/
+raw_files/
+raw_json/
+*.db
+Manifest.plist
+Info.plist
+*.csv
+!tests/**/*.csv
+TVTime.html
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
