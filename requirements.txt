@@ -1,0 +1,6 @@
+# TV Time Rescue dependencies.
+#
+# Unencrypted backups need NOTHING beyond the Python standard library.
+# The line below is only required to read ENCRYPTED backups (it also pulls in
+# pycryptodome). It is safe to install either way.
+iphone-backup-decrypt>=0.9.0
