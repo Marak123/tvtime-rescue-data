@@ -122,7 +122,7 @@ The file appears in `dist/`. You can only build for the system you are on (build
 
 ## Credits
 
-Built quickly with the help of AI to help the community after the TV Time shutdown. Based on the well-understood structure of iOS backups and the app's local cache. Uses [iphone-backup-decrypt](https://github.com/jsharkey13/iphone_backup_decrypt) for encrypted backups. Not affiliated with TV Time. All trademarks belong to their owners.
+**Built quickly with the help of AI** to help the community after the TV Time shutdown. Based on the well-understood structure of iOS backups and the app's local cache. Uses [iphone-backup-decrypt](https://github.com/jsharkey13/iphone_backup_decrypt) for encrypted backups. Not affiliated with TV Time. All trademarks belong to their owners.
 
 ## License
 
