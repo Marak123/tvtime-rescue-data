@@ -122,7 +122,7 @@ Plik pojawi się w `dist/`. Budujesz tylko dla systemu, na którym jesteś (exe 
 
 ## Podziękowania
 
-Zrobione szybko z pomocą AI, żeby pomóc społeczności po zamknięciu TV Time. Oparte na dobrze znanej strukturze backupów iOS i lokalnego cache aplikacji. Do backupów zaszyfrowanych używa [iphone-backup-decrypt](https://github.com/jsharkey13/iphone_backup_decrypt). Niepowiązane z TV Time. Wszystkie znaki towarowe należą do ich właścicieli.
+**Zrobione szybko z pomocą AI**, żeby pomóc społeczności po zamknięciu TV Time. Oparte na dobrze znanej strukturze backupów iOS i lokalnego cache aplikacji. Do backupów zaszyfrowanych używa [iphone-backup-decrypt](https://github.com/jsharkey13/iphone_backup_decrypt). Niepowiązane z TV Time. Wszystkie znaki towarowe należą do ich właścicieli.
 
 ## Licencja
 
