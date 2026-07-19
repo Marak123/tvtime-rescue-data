@@ -86,6 +86,21 @@ W skrócie:
 
 Jeśli backup jest zaszyfrowany, to też w porządku. Narzędzie to wykryje i poprosi o hasło backupu. Do tego przypadku potrzebna jest jeszcze obsługa deszyfrowania: `pip install iphone-backup-decrypt` (jest już w `requirements.txt`, a pobrany program ma to wbudowane).
 
+## Opcjonalnie: pełniejsze dane z TheTVDB (darmowy klucz API)
+
+Backup zawiera Twoją bibliotekę, prawdziwy status obejrzenia i sumy per serial, ale TV Time nie trzymał opisów seriali ani pełnej listy odcinków dla każdego serialu. Jeśli dodasz darmowy klucz API TheTVDB, narzędzie uzupełni te braki: pobierze opisy i gatunki seriali oraz kompletną listę sezonów i odcinków dla każdego serialu, a potem nałoży na nią prawdziwy status obejrzenia z Twojego backupu. Odcinki, które faktycznie obejrzałeś, zostają oznaczone; odcinki, dla których backup nie ma statusu, są pokazane jako nieznane, a nie zgadywane.
+
+To jest w pełni opcjonalne. Bez klucza wszystko i tak działa, dostajesz po prostu to, co było w samym backupie.
+
+Jak to ustawić:
+
+1. Weź darmowy klucz v4 na [thetvdb.com/api-information](https://thetvdb.com/api-information).
+2. Skopiuj plik `.env.example` do pliku o nazwie `.env` w folderze, z którego uruchamiasz narzędzie.
+3. Wpisz w nim swój klucz: `TVDB_API_KEY=twoj_klucz`
+4. Uruchom narzędzie jak zwykle. Użyje klucza automatycznie.
+
+Możesz też podać go w wierszu poleceń przez `--tvdb-key TWOJ_KLUCZ`, albo ustawić zmienną środowiskową `TVDB_API_KEY`. Użyj `--no-tvdb`, żeby pominąć TVDB nawet gdy klucz jest. Odpowiedzi są zapisywane w folderze `tvdb_cache` w Twoim folderze wyników, więc kolejne uruchomienie jest szybkie i nie pobiera na nowo. Nigdy nie wrzucaj pliku `.env` ani nie udostępniaj klucza.
+
 ## Gdzie leżą backupy (jeśli chcesz znaleźć folder sam)
 
 - Windows (Apple Devices / iTunes): `%APPDATA%\Apple Computer\MobileSync\Backup` albo `%USERPROFILE%\Apple\MobileSync\Backup`
@@ -117,8 +132,8 @@ Plik pojawi się w `dist/`. Budujesz tylko dla systemu, na którym jesteś (exe 
 
 - Na razie tylko iOS i iPadOS. Android trzyma te dane inaczej i nie jest jeszcze obsługiwany.
 - Dane pochodzą z cache aplikacji, więc bardzo świeże zmiany, które nigdy się nie wczytały, mogą nie być zapisane. Liczby zwykle są kompletne lub bliskie kompletu.
-- TV Time nie trzymał opisów seriali w cache, więc seriale mają plakat, tytuł i postęp odcinków, a filmy dodatkowo pełne opisy.
-- Szczegóły „który odcinek obejrzany, a który nie" są tylko częściowe. TV Time zapisywał sumę obejrzanych i wyemitowanych odcinków dla każdego serialu, ale pojedyncze odcinki trzymał tylko wokół Twojego bieżącego postępu (kolejka „do obejrzenia" i ostatnio obejrzane). Dlatego zakładka Episodes pokazuje odcinki, które trafiły do cache, a nie pełną historię odcinek po odcinku dla każdego serialu.
+- TV Time nie trzymał opisów seriali w cache. Bez klucza TheTVDB seriale mają plakat, tytuł i postęp odcinków, a filmy dodatkowo pełne opisy. Dodaj klucz (patrz wyżej), żeby uzupełnić opisy i gatunki seriali.
+- Szczegóły „który odcinek obejrzany, a który nie" z samego backupu są tylko częściowe. TV Time zapisywał sumę obejrzanych i wyemitowanych odcinków dla każdego serialu, ale pojedyncze odcinki trzymał tylko wokół Twojego bieżącego postępu (kolejka „do obejrzenia" i ostatnio obejrzane). Z kluczem TheTVDB narzędzie pobiera pełną listę odcinków każdego serialu i nakłada na nią Twój prawdziwy status obejrzenia, więc możesz przeglądać każdy sezon i odcinek; odcinki, dla których backup nie ma statusu, są pokazane jako nieznane, a nie zgadywane.
 - Odzyskane dane to snapshot dla Twoich potrzeb. To nie jest sposób na przywrócenie danych z powrotem do TV Time.
 
 ## Podziękowania

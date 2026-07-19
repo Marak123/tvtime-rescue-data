@@ -17,6 +17,7 @@ from .backup import (
 )
 from .parse import parse_library, write_csvs, write_report
 from .site import build_site
+from . import enrich
 
 BANNER = r"""
 ==================================================================
@@ -66,28 +67,43 @@ def _default_output() -> Path:
     return base / "TVTime-Recovered"
 
 
-def run(backup_dir: Path, output_dir: Path, password: str | None, make_site: bool) -> dict:
+def run(backup_dir: Path, output_dir: Path, password: str | None, make_site: bool,
+        tvdb_key: str | None = None, tvdb_pin: str | None = None) -> dict:
     raw_dir = output_dir / "raw_files"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print("\n[1/4] Reading the backup and copying TV Time files...")
+    print("\n[1/5] Reading the backup and copying TV Time files...")
     if is_encrypted(backup_dir) and not password:
         print("      This backup is ENCRYPTED. Please enter the backup password.")
         password = getpass.getpass("      Backup password: ")
     extract_tvtime(backup_dir, raw_dir, passphrase=password, log=lambda m: print(m))
 
-    print("\n[2/4] Parsing your library (DioCache.db)...")
+    print("\n[2/5] Parsing your library (DioCache.db)...")
     lib = parse_library(raw_dir / "DioCache.db")
 
-    print("[3/4] Writing spreadsheets and report...")
+    print("[3/5] Enriching series from TheTVDB...")
+    if tvdb_key:
+        try:
+            client = enrich.make_client(tvdb_key, tvdb_pin, output_dir / "tvdb_cache")
+            client.login()
+            enrich.enrich_library(lib, client, log=lambda m: print(m))
+        except Exception as exc:  # never let enrichment break the recovery
+            print(f"      TVDB enrichment skipped ({type(exc).__name__}: {exc}).")
+            print("      The rest of your data was still recovered from the backup.")
+    else:
+        print("      No TVDB key found - skipping (descriptions and full episode")
+        print("      lists stay as whatever the backup contained).")
+        print("      Add one in a .env file (TVDB_API_KEY=...) to enable this. See README.")
+
+    print("[4/5] Writing spreadsheets and report...")
     write_csvs(lib, output_dir)
     write_report(lib, output_dir)
 
     if make_site:
-        print("[4/4] Building the browsable web page...")
+        print("[5/5] Building the browsable web page...")
         build_site(lib, output_dir / "TVTime.html")
     else:
-        print("[4/4] Skipping web page (--no-site).")
+        print("[5/5] Skipping web page (--no-site).")
     return lib
 
 
@@ -117,6 +133,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--password", help="Backup password (encrypted backups). "
                                        "Leave empty to be asked securely.")
     ap.add_argument("--no-site", action="store_true", help="Do not build the HTML page.")
+    ap.add_argument("--tvdb-key", help="TheTVDB API key to fetch series descriptions and "
+                                       "full episode lists. Or set TVDB_API_KEY / put it in .env.")
+    ap.add_argument("--tvdb-pin", help="TheTVDB subscriber PIN, only for user-supported keys.")
+    ap.add_argument("--no-tvdb", action="store_true",
+                    help="Do not contact TheTVDB even if a key is available.")
     ap.add_argument("--version", action="version", version=f"tvtime-rescue {__version__}")
     args = ap.parse_args(argv)
 
@@ -136,7 +157,16 @@ def main(argv: list[str] | None = None) -> int:
         else:
             output_dir = _default_output()
 
-        lib = run(backup_dir, output_dir, args.password, not args.no_site)
+        tvdb_key, tvdb_pin = (None, None)
+        if not args.no_tvdb:
+            tvdb_key, tvdb_pin = enrich.load_key(args.tvdb_key)
+            if tvdb_pin and not args.tvdb_pin:
+                pass
+            elif args.tvdb_pin:
+                tvdb_pin = args.tvdb_pin
+
+        lib = run(backup_dir, output_dir, args.password, not args.no_site,
+                  tvdb_key=tvdb_key, tvdb_pin=tvdb_pin)
         _print_result(lib, output_dir)
     except BackupError as exc:
         print(f"\nERROR: {exc}\n", file=sys.stderr)

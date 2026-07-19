@@ -81,7 +81,11 @@ _TEMPLATE = r"""<!doctype html>
   .eptitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .epstatus{flex:none;font-size:12px;color:var(--dim)}
   .epstatus.seen{color:var(--green);font-weight:600}
+  .epstatus.unknown{color:#5b6675}
   .eprew{flex:none;font-size:11px;background:var(--accent);color:#111;border-radius:999px;padding:1px 7px;font-weight:700}
+  .epseason{background:#0f151c;padding:7px 14px;font-size:12px;font-weight:700;color:var(--dim);
+    border-top:1px solid var(--line);letter-spacing:.4px;text-transform:uppercase}
+  .eplegend{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
   .modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
   .modal.open{display:flex}
   .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.72)}
@@ -160,9 +164,10 @@ const ALL = DATA.items; ALL.forEach((it,i)=>it._i=i);
 const $ = s => document.querySelector(s);
 function pad(n){return String(n||0).padStart(2,'0');}
 function epCode(e){return 'S'+pad(e.season)+'E'+pad(e.number);}
-function epStatus(e){return e.seen
-  ? `<span class="epstatus seen">Watched${e.seen_date?' '+e.seen_date.slice(0,10):''}</span>`
-  : `<span class="epstatus">Not watched</span>`;}
+function epStatus(e){
+  if(e.seen===true) return `<span class="epstatus seen">Watched${e.seen_date?' '+e.seen_date.slice(0,10):''}</span>`;
+  if(e.seen===false) return `<span class="epstatus">Not watched</span>`;
+  return `<span class="epstatus unknown" title="Not stored in the backup">-</span>`;}
 function epRew(e){return (e.times_watched||0)>1?`<span class="eprew">x${e.times_watched}</span>`:'';}
 
 $('#who').textContent = DATA.profile.name ? ('account: ' + DATA.profile.name) : '';
@@ -221,9 +226,10 @@ function renderEpisodes(){
   let eps=[];
   ALL.forEach(it=>{ if(it.kind==='series'&&it.episodes) it.episodes.forEach(e=>eps.push(e)); });
   eps=eps.filter(e=>{
+    if(e.seen!==true && e.seen!==false) return false;   // only episodes with a known status
     if(q && !((e.show||'').toLowerCase().includes(q)||(e.name||'').toLowerCase().includes(q))) return false;
-    if(epFilter==='seen')return e.seen;
-    if(epFilter==='unseen')return !e.seen;
+    if(epFilter==='seen')return e.seen===true;
+    if(epFilter==='unseen')return e.seen===false;
     return true;});
   eps.sort((a,b)=>(a.show||'').localeCompare(b.show||'')||((a.season||0)-(b.season||0))||((a.number||0)-(b.number||0)));
   $('#count').textContent = eps.length+' episodes';
@@ -294,12 +300,24 @@ function openModal(it){
 
   let epHtml='';
   if(it.kind==='series' && it.episodes && it.episodes.length){
-    const list=it.episodes.slice().sort((a,b)=>((a.season||0)-(b.season||0))||((a.number||0)-(b.number||0)));
-    const seen=list.filter(e=>e.seen).length;
-    epHtml='<div class="modal-eps"><div class="modal-eps-h">Individual episodes saved in the backup ('
-      +seen+' watched / '+list.length+' saved) - partial, only near your progress</div>';
-    list.forEach(e=>{ epHtml+=`<div class="ep"><span class="epcode">${epCode(e)}</span>`
-      +`<span class="eptitle">${e.name||''}</span>${epRew(e)}${epStatus(e)}</div>`; });
+    const list=it.episodes.slice().sort((a,b)=>(((a.season==null?999:a.season)-(b.season==null?999:b.season))||((a.number||0)-(b.number||0))));
+    const seen=list.filter(e=>e.seen===true).length;
+    let head, legend='';
+    if(it.episodes_full){
+      head=`Full episode list from TheTVDB - ${it.watched_eps} watched of ${it.aired_eps} aired`;
+      legend='<div class="eplegend"><span class="epstatus seen">Watched</span>'
+        +'<span class="epstatus">Not watched</span>'
+        +'<span class="epstatus unknown">- not stored in backup</span></div>';
+    }else{
+      head=`Individual episodes saved in the backup (${seen} watched / ${list.length} saved) - partial, only near your progress`;
+    }
+    epHtml='<div class="modal-eps"><div class="modal-eps-h">'+head+'</div>'+legend;
+    let curS=null;
+    list.forEach(e=>{
+      if(e.season!==curS){ curS=e.season; epHtml+=`<div class="epseason">Season ${curS==null?'?':curS}</div>`; }
+      epHtml+=`<div class="ep"><span class="epcode">${epCode(e)}</span>`
+        +`<span class="eptitle">${e.name||''}</span>${epRew(e)}${epStatus(e)}</div>`;
+    });
     epHtml+='</div>';
   }
   $('#m-eps').innerHTML=epHtml;
