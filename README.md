@@ -86,6 +86,21 @@ Short version:
 
 If your backup is encrypted, that is fine too. The tool detects it and asks for the backup password. For that case you also need the decryption support installed: `pip install iphone-backup-decrypt` (it is already in `requirements.txt`, and the downloaded program has it built in).
 
+## Optional: fuller data from TheTVDB (free API key)
+
+The backup contains your library, your real watched status, and per-series counts, but TV Time did not store series descriptions or the full list of episodes for each show. If you add a free TheTVDB API key, the tool fills those gaps: it fetches series descriptions and genres and the complete season and episode list for every show, then overlays the real watched status from your backup on top. Episodes you actually watched stay marked as watched; episodes the backup never recorded a status for are shown as unknown rather than guessed.
+
+This is completely optional. Without a key everything still works, you just get whatever the backup itself contained.
+
+How to set it up:
+
+1. Get a free v4 API key at [thetvdb.com/api-information](https://thetvdb.com/api-information).
+2. Copy the file `.env.example` to a file named `.env` in the folder you run the tool from.
+3. Put your key in it: `TVDB_API_KEY=your_key_here`
+4. Run the tool as usual. It will use the key automatically.
+
+You can instead pass it on the command line with `--tvdb-key YOUR_KEY`, or set a `TVDB_API_KEY` environment variable. Use `--no-tvdb` to skip it even if a key is present. Responses are cached in a `tvdb_cache` folder inside your output, so running again is fast and does not re-download. Never commit your `.env` or share your key.
+
 ## Where backups live (if you want to find the folder yourself)
 
 - Windows (Apple Devices / iTunes): `%APPDATA%\Apple Computer\MobileSync\Backup` or `%USERPROFILE%\Apple\MobileSync\Backup`
@@ -117,8 +132,8 @@ The file appears in `dist/`. You can only build for the system you are on (build
 
 - iOS and iPadOS only for now. Android stores this data differently and is not supported yet.
 - The data is from the app cache, so very recent changes that never loaded might be missing. Numbers are usually complete or close to it.
-- TV Time did not keep series descriptions in the cache, so series show a poster, title and episode progress, while movies also have full descriptions.
-- Per-episode watched/not-watched detail is only partial. TV Time stored the total watched and aired count for every series, but it kept individual episodes only around your current position (the up-next queue and recently watched). So the Episodes tab shows the episodes that were cached, not the full episode-by-episode history of every show.
+- TV Time did not keep series descriptions in the cache. Without a TheTVDB key, series show a poster, title and episode progress, while movies also have full descriptions. Add a key (see above) to fill in series descriptions and genres.
+- Per-episode watched/not-watched detail from the backup alone is only partial. TV Time stored the total watched and aired count for every series, but it kept individual episodes only around your current position (the up-next queue and recently watched). With a TheTVDB key the tool pulls the full episode list for each show and overlays your real watched status on it, so you can browse every season and episode; episodes the backup had no status for are shown as unknown rather than guessed.
 - The recovered data is a snapshot for your own records. This is not a way to restore data back into TV Time.
 
 ## Credits

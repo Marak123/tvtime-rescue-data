@@ -11,10 +11,15 @@ build/
 dist/
 *.spec
 
+# Secrets - never commit your real API key
+.env
+
 # Never commit real backups or recovered personal data
 TVTime-Recovered/
+TVTime-Recovered-EN/
 raw_files/
 raw_json/
+tvdb_cache/
 *.db
 Manifest.plist
 Info.plist

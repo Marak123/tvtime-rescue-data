@@ -3,4 +3,4 @@
 Supports both unencrypted and encrypted iOS backups. iOS/iPadOS only.
 """
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
