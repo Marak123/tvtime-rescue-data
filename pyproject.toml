@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tvtime-rescue"
-version = "0.1.0"
+version = "0.1.1"
 description = "Recover your TV Time library and watch history from a local iOS backup (unencrypted or encrypted)."
 readme = "README.md"
 license = { text = "MIT" }

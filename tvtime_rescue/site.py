@@ -40,6 +40,10 @@ _TEMPLATE = r"""<!doctype html>
   .tab{background:var(--card);border:1px solid var(--line);color:var(--dim);border-radius:999px;
     padding:8px 14px;font-size:13px;cursor:pointer;user-select:none}
   .tab.active{background:var(--accent);color:#111;border-color:var(--accent);font-weight:700}
+  .epfilter{display:none;gap:6px}
+  .epf{background:var(--card);border:1px solid var(--line);color:var(--dim);border-radius:999px;
+    padding:7px 12px;font-size:12px;cursor:pointer;user-select:none}
+  .epf.active{background:var(--green);color:#04210f;border-color:var(--green);font-weight:700}
   .count{color:var(--dim);font-size:13px;margin-left:auto}
   main{max-width:1400px;margin:0 auto;padding:18px 20px 60px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
@@ -65,6 +69,19 @@ _TEMPLATE = r"""<!doctype html>
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:34px}
   .sub{color:var(--dim);font-size:12px;margin-top:4px}
   .empty{color:var(--dim);text-align:center;padding:60px 20px}
+  .note{color:var(--dim);font-size:13px;line-height:1.5;background:var(--bg2);border:1px solid var(--line);
+    border-radius:10px;padding:12px 14px;margin-bottom:16px}
+  /* episode list */
+  .epgroup{margin-bottom:18px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .epshow{background:var(--bg2);padding:10px 14px;font-weight:700;font-size:14px;
+    display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .epshow .n{color:var(--dim);font-weight:500;font-size:12px}
+  .ep{display:flex;align-items:center;gap:12px;padding:9px 14px;border-top:1px solid var(--line);font-size:13.5px}
+  .epcode{color:var(--dim);font-variant-numeric:tabular-nums;flex:none;width:64px}
+  .eptitle{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .epstatus{flex:none;font-size:12px;color:var(--dim)}
+  .epstatus.seen{color:var(--green);font-weight:600}
+  .eprew{flex:none;font-size:11px;background:var(--accent);color:#111;border-radius:999px;padding:1px 7px;font-weight:700}
   .modal{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:20px}
   .modal.open{display:flex}
   .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.72)}
@@ -85,6 +102,8 @@ _TEMPLATE = r"""<!doctype html>
   .ov{color:#c9d4e0;line-height:1.55;margin-top:12px;font-size:14.5px}
   .kv{margin-top:14px;font-size:13.5px;color:var(--dim)}
   .kv b{color:var(--txt);font-weight:600}
+  .modal-eps{margin-top:18px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .modal-eps-h{background:var(--card);padding:9px 14px;font-weight:700;font-size:13px}
   .close{position:absolute;top:12px;right:14px;z-index:3;background:rgba(0,0,0,.6);border:none;
     color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer}
   .footer{max-width:1400px;margin:0 auto;padding:0 20px 40px;color:var(--dim);font-size:12px}
@@ -98,6 +117,11 @@ _TEMPLATE = r"""<!doctype html>
 <div class="controls"><div class="controls-inner">
   <input id="q" type="search" placeholder="Search title, genre, year...">
   <div class="tabs" id="tabs"></div>
+  <span class="epfilter" id="epfilter">
+    <span class="epf active" data-ef="all">All</span>
+    <span class="epf" data-ef="seen">Watched</span>
+    <span class="epf" data-ef="unseen">Not watched</span>
+  </span>
   <select id="sort">
     <option value="date">Recently watched</option>
     <option value="title">Title A-Z</option>
@@ -106,7 +130,11 @@ _TEMPLATE = r"""<!doctype html>
   </select>
   <span class="count" id="count"></span>
 </div></div>
-<main><div class="grid" id="grid"></div><div class="empty" id="empty" style="display:none">No results.</div></main>
+<main>
+  <div class="grid" id="grid"></div>
+  <div id="eplist" style="display:none"></div>
+  <div class="empty" id="empty" style="display:none">No results.</div>
+</main>
 <div class="footer">Recovered locally from an iOS backup (DioCache.db). Posters from thetvdb.com. Private - for your eyes only.</div>
 <div class="modal" id="modal">
   <div class="backdrop" data-close></div>
@@ -120,6 +148,7 @@ _TEMPLATE = r"""<!doctype html>
         <div class="chips" id="m-chips"></div>
         <div class="ov" id="m-ov"></div>
         <div class="kv" id="m-kv"></div>
+        <div id="m-eps"></div>
       </div>
     </div>
   </div>
@@ -129,6 +158,13 @@ _TEMPLATE = r"""<!doctype html>
 const DATA = JSON.parse(document.getElementById('data').textContent);
 const ALL = DATA.items; ALL.forEach((it,i)=>it._i=i);
 const $ = s => document.querySelector(s);
+function pad(n){return String(n||0).padStart(2,'0');}
+function epCode(e){return 'S'+pad(e.season)+'E'+pad(e.number);}
+function epStatus(e){return e.seen
+  ? `<span class="epstatus seen">Watched${e.seen_date?' '+e.seen_date.slice(0,10):''}</span>`
+  : `<span class="epstatus">Not watched</span>`;}
+function epRew(e){return (e.times_watched||0)>1?`<span class="eprew">x${e.times_watched}</span>`:'';}
+
 $('#who').textContent = DATA.profile.name ? ('account: ' + DATA.profile.name) : '';
 const s = DATA.stats;
 $('#stats').innerHTML = [['Movies',s.movies],['Series',s.series],
@@ -136,14 +172,18 @@ $('#stats').innerHTML = [['Movies',s.movies],['Series',s.series],
   ['Watchlist',s.watchlist],['Archived',s.archived]]
   .map(([l,v])=>`<span class="stat"><b>${v}</b> ${l}</span>`).join('');
 const TABS=[['all','All'],['movie','Movies'],['series','Series'],
-  ['watchlist','Watchlist'],['favorites','Favorites'],['archived','Archived']];
-let tab='all',sort='date',q='';
+  ['watchlist','Watchlist'],['favorites','Favorites'],['archived','Archived'],['episodes','Episodes']];
+let tab='all',sort='date',q='',epFilter='all';
 $('#tabs').innerHTML = TABS.map(([k,l],i)=>`<span class="tab${i?'':' active'}" data-tab="${k}">${l}</span>`).join('');
 $('#tabs').onclick=e=>{const t=e.target.closest('.tab');if(!t)return;
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');tab=t.dataset.tab;render();};
+$('#epfilter').onclick=e=>{const t=e.target.closest('.epf');if(!t)return;
+  document.querySelectorAll('.epf').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');epFilter=t.dataset.ef;render();};
 $('#q').oninput=e=>{q=e.target.value.trim().toLowerCase();render();};
 $('#sort').onchange=e=>{sort=e.target.value;render();};
+
 function matchTab(it){
   if(tab==='all')return true;
   if(tab==='movie')return it.kind==='movie';
@@ -176,12 +216,54 @@ function card(it){
     ${it.poster?`<img loading="lazy" src="${it.poster}" onerror="this.parentElement.classList.add('broken')">`:''}
     <div class="ph">${it.title}</div><div class="tag">${tag}</div>${fav}${done}${pbar}</div>
     <div class="meta"><div class="title">${it.title}</div><div class="sub">${sub}</div></div></div>`;}
+
+function renderEpisodes(){
+  let eps=[];
+  ALL.forEach(it=>{ if(it.kind==='series'&&it.episodes) it.episodes.forEach(e=>eps.push(e)); });
+  eps=eps.filter(e=>{
+    if(q && !((e.show||'').toLowerCase().includes(q)||(e.name||'').toLowerCase().includes(q))) return false;
+    if(epFilter==='seen')return e.seen;
+    if(epFilter==='unseen')return !e.seen;
+    return true;});
+  eps.sort((a,b)=>(a.show||'').localeCompare(b.show||'')||((a.season||0)-(b.season||0))||((a.number||0)-(b.number||0)));
+  $('#count').textContent = eps.length+' episodes';
+  let html='<div class="note">TV Time only saved these individual episodes (the ones around your '
+    +'current progress). It kept the total watched and aired count for every series, but not the full '
+    +'per-episode history, so this list is partial. The series cards still show your real totals.</div>';
+  if(!eps.length){ html+='<div class="empty">No individual episodes match this filter.</div>'; $('#eplist').innerHTML=html; return; }
+  let cur=null, buf='';
+  eps.forEach(e=>{
+    if(e.show!==cur){
+      if(cur!==null) html+=buf+'</div>';
+      cur=e.show;
+      const total=eps.filter(x=>x.show===cur);
+      const seen=total.filter(x=>x.seen).length;
+      html+=`<div class="epgroup"><div class="epshow"><span>${e.show||'Unknown show'}</span>`
+           +`<span class="n">${seen} watched / ${total.length} saved</span></div>`;
+      buf='';
+    }
+    buf+=`<div class="ep"><span class="epcode">${epCode(e)}</span>`
+        +`<span class="eptitle">${e.name||''}</span>${epRew(e)}${epStatus(e)}</div>`;
+  });
+  html+=buf+'</div>';
+  $('#eplist').innerHTML=html;
+}
+
 function render(){
+  const ep = tab==='episodes';
+  $('#grid').style.display = ep?'none':'grid';
+  $('#eplist').style.display = ep?'block':'none';
+  $('#epfilter').style.display = ep?'flex':'none';
+  $('#sort').style.display = ep?'none':'';
+  $('#empty').style.display='none';
+  if(ep){ renderEpisodes(); return; }
   const list=ALL.filter(it=>matchTab(it)&&matchQ(it)).sort(sorter);
   $('#count').textContent=list.length+' items';
   $('#grid').innerHTML=list.map(card).join('');
-  $('#empty').style.display=list.length?'none':'block';}
+  $('#empty').style.display=list.length?'none':'block';
+}
 $('#grid').onclick=e=>{const c=e.target.closest('.card');if(c)openModal(ALL[+c.dataset.id]);};
+
 function openModal(it){
   $('#m-title').textContent=it.title+(it.year?` (${it.year})`:'');
   $('#m-hero').src=it.fanart||it.poster||'';
@@ -209,7 +291,20 @@ function openModal(it){
     if(it.rating>0)kv.push(`<b>Your rating:</b> ${it.rating}/10`);
     if(it.imdb_id)kv.push(`<a href="https://www.imdb.com/title/${it.imdb_id}/" target="_blank" rel="noopener">IMDb</a>`);}
   $('#m-kv').innerHTML=kv.join(' &nbsp;-&nbsp; ');
-  $('#modal').classList.add('open');}
+
+  let epHtml='';
+  if(it.kind==='series' && it.episodes && it.episodes.length){
+    const list=it.episodes.slice().sort((a,b)=>((a.season||0)-(b.season||0))||((a.number||0)-(b.number||0)));
+    const seen=list.filter(e=>e.seen).length;
+    epHtml='<div class="modal-eps"><div class="modal-eps-h">Individual episodes saved in the backup ('
+      +seen+' watched / '+list.length+' saved) - partial, only near your progress</div>';
+    list.forEach(e=>{ epHtml+=`<div class="ep"><span class="epcode">${epCode(e)}</span>`
+      +`<span class="eptitle">${e.name||''}</span>${epRew(e)}${epStatus(e)}</div>`; });
+    epHtml+='</div>';
+  }
+  $('#m-eps').innerHTML=epHtml;
+  $('#modal').classList.add('open');
+}
 document.querySelectorAll('[data-close]').forEach(x=>x.onclick=()=>$('#modal').classList.remove('open'));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')$('#modal').classList.remove('open')});
 render();

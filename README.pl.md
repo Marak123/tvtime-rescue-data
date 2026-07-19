@@ -20,8 +20,8 @@ Dane pochodzą z lokalnego cache aplikacji, więc odzwierciedlają to, co aplika
 
 ## Co dostajesz
 
-- `TVTime.html` - jeden plik, który otwierasz w przeglądarce, żeby przejrzeć wszystko: plakaty, tytuły, opisy, gatunki, daty obejrzenia i postęp odcinków dla każdego serialu. Ma wyszukiwarkę, filtry (Filmy, Seriale, Do obejrzenia, Ulubione, Archiwum) i sortowanie.
-- `movies.csv`, `series.csv`, `watch_history.csv` - arkusze, które otworzysz w Excelu lub zaimportujesz gdzie indziej (na przykład Trakt albo Serializd).
+- `TVTime.html` - jeden plik, który otwierasz w przeglądarce, żeby przejrzeć wszystko: plakaty, tytuły, opisy, gatunki, daty obejrzenia i postęp odcinków dla każdego serialu. Ma wyszukiwarkę, sortowanie, filtry (Filmy, Seriale, Do obejrzenia, Ulubione, Archiwum) oraz zakładkę Episodes, która pokazuje pojedyncze odcinki ze znacznikiem obejrzany / nieobejrzany tam, gdzie backup je zapisał.
+- `movies.csv`, `series.csv`, `watch_history.csv`, `episodes.csv` - arkusze, które otworzysz w Excelu lub zaimportujesz gdzie indziej (na przykład Trakt albo Serializd).
 - `TVTime-Recovered-Data.md` - krótki czytelny raport.
 - `raw_files/` - same pliki aplikacji wyjęte z backupu (baza danych i ustawienia), gdybyś ich potrzebował.
 
@@ -118,6 +118,7 @@ Plik pojawi się w `dist/`. Budujesz tylko dla systemu, na którym jesteś (exe 
 - Na razie tylko iOS i iPadOS. Android trzyma te dane inaczej i nie jest jeszcze obsługiwany.
 - Dane pochodzą z cache aplikacji, więc bardzo świeże zmiany, które nigdy się nie wczytały, mogą nie być zapisane. Liczby zwykle są kompletne lub bliskie kompletu.
 - TV Time nie trzymał opisów seriali w cache, więc seriale mają plakat, tytuł i postęp odcinków, a filmy dodatkowo pełne opisy.
+- Szczegóły „który odcinek obejrzany, a który nie" są tylko częściowe. TV Time zapisywał sumę obejrzanych i wyemitowanych odcinków dla każdego serialu, ale pojedyncze odcinki trzymał tylko wokół Twojego bieżącego postępu (kolejka „do obejrzenia" i ostatnio obejrzane). Dlatego zakładka Episodes pokazuje odcinki, które trafiły do cache, a nie pełną historię odcinek po odcinku dla każdego serialu.
 - Odzyskane dane to snapshot dla Twoich potrzeb. To nie jest sposób na przywrócenie danych z powrotem do TV Time.
 
 ## Podziękowania

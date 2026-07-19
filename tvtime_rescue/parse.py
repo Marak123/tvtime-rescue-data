@@ -24,6 +24,18 @@ def _iso_to_ms(s: str) -> int:
         return 0
 
 
+def _walk(obj):
+    """Yield every dict found anywhere inside a nested JSON structure."""
+    stack = [obj]
+    while stack:
+        x = stack.pop()
+        if isinstance(x, dict):
+            yield x
+            stack.extend(x.values())
+        elif isinstance(x, list):
+            stack.extend(x)
+
+
 def _first_image(meta: dict, kind: str) -> str:
     pools = []
     if kind == "poster":
@@ -197,6 +209,51 @@ def _build_watch_events(cache) -> list[dict]:
     return out
 
 
+def _build_episodes(cache) -> list[dict]:
+    """Individual episodes TV Time cached around the user's current progress.
+
+    This is NOT the full episode list of every show. The app only kept the
+    episodes near your position (the up-next queue and recently watched), so
+    coverage is partial. Each episode carries a real watched flag, so what is
+    here is accurate; it is just not complete.
+    """
+    eps: dict = {}
+    for _k, _s, _age, d in cache:
+        for x in _walk(d):
+            if "season_number" not in x or "number" not in x:
+                continue
+            if not ("seen" in x or "is_watched" in x or "seen_date" in x):
+                continue
+            eid = x.get("id")
+            if eid is None:
+                continue
+            show = x.get("show") if isinstance(x.get("show"), dict) else {}
+            seen = bool(x.get("seen") or x.get("is_watched"))
+            nb = x.get("nb_times_watched") or 0
+            seen_date = (x.get("seen_date") or "")[:19]
+            rec = eps.get(eid)
+            if rec is None:
+                eps[eid] = {
+                    "episode_id": eid,
+                    "show_id": show.get("id"),
+                    "show": show.get("name", ""),
+                    "season": x.get("season_number"),
+                    "number": x.get("number"),
+                    "name": x.get("name", ""),
+                    "seen": seen,
+                    "seen_date": seen_date,
+                    "times_watched": nb,
+                    "air_date": x.get("air_date") or "",
+                }
+            else:
+                rec["seen"] = rec["seen"] or seen
+                rec["times_watched"] = max(rec["times_watched"], nb)
+                if not rec["seen_date"] and seen_date:
+                    rec["seen_date"] = seen_date
+    return sorted(eps.values(),
+                  key=lambda e: (str(e["show"]).lower(), e["season"] or 0, e["number"] or 0))
+
+
 def _find_profile(cache) -> dict:
     for _k, _s, _age, d in cache:
         if not isinstance(d, dict):
@@ -214,20 +271,31 @@ def parse_library(diocache: Path) -> dict:
     movies = _build_movies(cache)
     series = _build_series(cache)
     watch_events = _build_watch_events(cache)
+    episode_details = _build_episodes(cache)
     profile = _find_profile(cache)
-    episodes = sum(int(s["watched_eps"]) for s in series if str(s["watched_eps"]).isdigit())
+
+    # Attach the cached individual episodes to their show.
+    by_show: dict = {}
+    for e in episode_details:
+        by_show.setdefault(e["show_id"], []).append(e)
+    for s in series:
+        s["episodes"] = by_show.get(s["id"], [])
+
+    total_watched_eps = sum(int(s["watched_eps"]) for s in series if str(s["watched_eps"]).isdigit())
     stats = {
         "movies": len(movies),
         "series": len(series),
-        "episodes": episodes,
+        "episodes": total_watched_eps,
         "watchlist": sum(1 for m in movies if m["watch_later"]) + sum(1 for s in series if s["for_later"]),
         "favorites": sum(1 for s in series if s["favorite"]),
         "archived": sum(1 for s in series if s["archived"]),
         "watch_events": len(watch_events),
+        "episode_details": len(episode_details),
+        "episode_details_seen": sum(1 for e in episode_details if e["seen"]),
         "cache_entries": len(cache),
     }
     return {"movies": movies, "series": series, "watch_events": watch_events,
-            "profile": profile, "stats": stats}
+            "episodes": episode_details, "profile": profile, "stats": stats}
 
 
 # --------------------------------------------------------------------------
@@ -253,6 +321,9 @@ def write_csvs(lib: dict, out: Path) -> None:
     _csv(out / "series.csv", lib["series"], series_fields)
     _csv(out / "watch_history.csv", lib["watch_events"],
          ["entity_type", "watched_at", "created_at", "runtime_min", "uuid"])
+    _csv(out / "episodes.csv", lib["episodes"],
+         ["show", "season", "number", "name", "seen", "seen_date", "times_watched",
+          "air_date", "show_id", "episode_id"])
     (out / "profile.json").write_text(json.dumps(lib["profile"], ensure_ascii=False, indent=2),
                                       encoding="utf-8")
     (out / "summary.json").write_text(json.dumps(lib["stats"], ensure_ascii=False, indent=2),
@@ -274,6 +345,12 @@ def write_report(lib: dict, out: Path) -> None:
     L.append(f"- On the watchlist: {s['watchlist']}")
     L.append(f"- Archived series: {s['archived']}")
     L.append(f"- Watch events: {s['watch_events']}")
+    L.append(f"- Individual episodes cached (partial): {s['episode_details']} "
+             f"({s['episode_details_seen']} watched)")
+    L.append("")
+    L.append("Note: TV Time stored the watched/aired counts for every series, plus a small "
+             "window of individual episodes near your current progress. The full per-episode "
+             "history for all shows was not kept in the backup.")
     L.append("")
     L.append("## Most-watched series")
     L.append("")
@@ -296,7 +373,7 @@ def write_report(lib: dict, out: Path) -> None:
     L.append("")
     L.append("## Files")
     L.append("- TVTime.html - open this to browse everything with posters")
-    L.append("- movies.csv, series.csv, watch_history.csv - spreadsheets")
+    L.append("- movies.csv, series.csv, watch_history.csv, episodes.csv - spreadsheets")
     L.append("- profile.json, summary.json")
     L.append("- raw_files/ - the app files taken from the backup")
     (out / "TVTime-Recovered-Data.md").write_text("\n".join(L) + "\n", encoding="utf-8")

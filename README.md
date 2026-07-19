@@ -20,8 +20,8 @@ The data comes from the app's local cache, so it reflects what the app had last 
 
 ## What you get
 
-- `TVTime.html` - one file you open in your browser to look through everything: posters, titles, descriptions, genres, watched dates, and episode progress for every series. Has search, filters (Movies, Series, Watchlist, Favorites, Archived) and sorting.
-- `movies.csv`, `series.csv`, `watch_history.csv` - spreadsheets you can open in Excel or import somewhere else (for example Trakt or Serializd).
+- `TVTime.html` - one file you open in your browser to look through everything: posters, titles, descriptions, genres, watched dates, and episode progress for every series. Has search, sorting, filters (Movies, Series, Watchlist, Favorites, Archived), and an Episodes tab that lists the individual episodes with a watched / not watched marker where the backup kept them.
+- `movies.csv`, `series.csv`, `watch_history.csv`, `episodes.csv` - spreadsheets you can open in Excel or import somewhere else (for example Trakt or Serializd).
 - `TVTime-Recovered-Data.md` - a short readable report.
 - `raw_files/` - the actual app files taken from the backup (the database and preferences), in case you want them.
 
@@ -118,6 +118,7 @@ The file appears in `dist/`. You can only build for the system you are on (build
 - iOS and iPadOS only for now. Android stores this data differently and is not supported yet.
 - The data is from the app cache, so very recent changes that never loaded might be missing. Numbers are usually complete or close to it.
 - TV Time did not keep series descriptions in the cache, so series show a poster, title and episode progress, while movies also have full descriptions.
+- Per-episode watched/not-watched detail is only partial. TV Time stored the total watched and aired count for every series, but it kept individual episodes only around your current position (the up-next queue and recently watched). So the Episodes tab shows the episodes that were cached, not the full episode-by-episode history of every show.
 - The recovered data is a snapshot for your own records. This is not a way to restore data back into TV Time.
 
 ## Credits
