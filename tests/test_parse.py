@@ -48,6 +48,15 @@ def _make_fake_diocache(path: Path) -> None:
         # A profile response.
         {"status": "success", "data": {
             "id": 999, "name": "TestUser", "is_vip": False, "is_premium": True}},
+        # An episode list (top-level list) with per-episode watched status.
+        [
+            {"id": 5001, "name": "Pilot", "number": 1, "season_number": 1,
+             "seen": True, "seen_date": "2026-01-02 20:00:00", "nb_times_watched": 2,
+             "show": {"id": 12345, "name": "Fake Series"}},
+            {"id": 5002, "name": "Second", "number": 2, "season_number": 1,
+             "seen": False, "seen_date": "", "nb_times_watched": 0,
+             "show": {"id": 12345, "name": "Fake Series"}},
+        ],
     ]
     for i, r in enumerate(responses):
         con.execute("INSERT INTO cache_dio VALUES (?,?,?,?,?,?,?)",
@@ -77,6 +86,13 @@ def test_parse_library():
     series = lib["series"][0]
     assert series["title"] == "Fake Series"
     assert series["watched_eps"] == 20 and series["aired_eps"] == 24
+
+    # Episode-level detail
+    assert lib["stats"]["episode_details"] == 2
+    assert lib["stats"]["episode_details_seen"] == 1
+    assert len(series["episodes"]) == 2
+    pilot = next(e for e in series["episodes"] if e["number"] == 1)
+    assert pilot["seen"] is True and pilot["times_watched"] == 2
 
     assert lib["profile"]["name"] == "TestUser"
     print("OK - parser smoke test passed")
