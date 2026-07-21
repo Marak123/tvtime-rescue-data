@@ -41,7 +41,7 @@ There are two ways to run it. Pick one.
 
 ### Option A: download the ready-made program (no Python needed)
 
-1. Go to the [Releases page](https://github.com/Marak123/tvtime-rescue/releases) and download the file for your system:
+1. Go to the [Releases page](https://github.com/Marak123/tvtime-rescue-data/releases) and download the file for your system:
    - Windows: `tvtime-rescue-windows.exe`
    - Mac: `tvtime-rescue-macos`
    - Linux: `tvtime-rescue-linux`
