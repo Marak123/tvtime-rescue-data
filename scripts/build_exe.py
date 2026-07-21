@@ -36,7 +36,9 @@ def main() -> int:
         "--console",
         "--noconfirm",
         "--clean",
-        # Bundle the encrypted-backup support and its crypto backend fully.
+        # Bundle every subpackage (extract, viewer, exporters) and the
+        # encrypted-backup support with its crypto backend.
+        "--collect-submodules", "tvtime_rescue",
         "--collect-all", "iphone_backup_decrypt",
         "--collect-all", "Crypto",
         "--distpath", str(ROOT / "dist"),
