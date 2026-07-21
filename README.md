@@ -117,6 +117,10 @@ python run.py export --input "PATH_TO_RECOVERED_FOLDER"
   for TV, because Simkl uses the same count-based episode model TV Time did, so
   each show gets a status and a last-episode-watched.
 - Trakt (movies, series, episodes): a sync-API JSON plus per-list CSV files.
+- IMDb (films): ratings and watchlist CSVs in IMDb's layout, which also work as a
+  universal "IMDb CSV" import source for the other services.
+- Universal JSON: one clean, documented JSON of everything, for building your own
+  importer.
 
 Movies transfer cleanly (IMDb id, watched date, rating). For series, only Simkl
 receives full progress; Trakt gets your shows on the watchlist plus the specific

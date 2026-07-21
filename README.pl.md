@@ -117,6 +117,10 @@ python run.py export --input "SCIEZKA_DO_FOLDERU_WYNIKOW"
   seriali, bo Simkl używa tego samego modelu opartego na liczbie odcinków co TV
   Time, więc każdy serial dostaje status i ostatni obejrzany odcinek.
 - Trakt (filmy, seriale, odcinki): JSON w formacie sync API plus pliki CSV.
+- IMDb (filmy): CSV z ocenami i watchlistą w układzie IMDb, które działają też
+  jako uniwersalny „IMDb CSV" do importu na pozostałe serwisy.
+- Uniwersalny JSON: jeden czysty, udokumentowany plik JSON ze wszystkim, do
+  zbudowania własnego importera.
 
 Filmy przenoszą się w pełni (IMDb id, data obejrzenia, ocena). Dla seriali pełny
 postęp dostaje tylko Simkl; Trakt dostaje seriale na watchliście plus te odcinki,

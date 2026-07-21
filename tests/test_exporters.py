@@ -79,6 +79,22 @@ def test_run_all_exports():
         assert len(eps) == 2 and eps[0]["tvdb"] == "72108"
         hist = _read_csv(out / "trakt" / "trakt_movies_history.csv")
         assert any(r["imdb"] == "tt1234567" for r in hist)
+
+        # IMDb (ratings + watchlist, films only)
+        imdb_r = _read_csv(out / "imdb" / "imdb_ratings.csv")
+        assert len(imdb_r) == 1 and imdb_r[0]["Const"] == "tt1234567"
+        assert imdb_r[0]["Your Rating"] == "8"
+        imdb_w = _read_csv(out / "imdb" / "imdb_watchlist.csv")
+        assert len(imdb_w) == 1 and imdb_w[0]["Title"] == "Later Movie"
+
+        # Universal JSON (clean schema, unknown episode status preserved as null)
+        import json as _json
+        uni = _json.loads((out / "json" / "tvtime_library.json").read_text(encoding="utf-8"))
+        assert uni["schema_version"] == 1
+        assert len(uni["movies"]) == 2 and len(uni["series"]) == 1
+        s0 = uni["series"][0]
+        assert s0["tvdb_id"] == 72108 and s0["state"] == "watching"
+        assert s0["episodes"][2]["watched"] is None
     print("OK - all exporters produced correct files")
 
 

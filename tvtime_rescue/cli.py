@@ -25,7 +25,7 @@ from .extract.parse import parse_library, write_csvs, write_report
 from .exporters import load_library, run_exports, save_library
 from .viewer import build_site
 
-ALL_PLATFORMS = ("letterboxd", "simkl", "trakt")
+ALL_PLATFORMS = ("letterboxd", "simkl", "trakt", "imdb", "json")
 
 BANNER = r"""
 ==================================================================
@@ -112,7 +112,7 @@ def run(backup_dir: Path, output_dir: Path, password: str | None, make_site: boo
         build_site(lib, output_dir / "TVTime.html")
 
     if do_export:
-        print("[6] Creating import files for Letterboxd, Simkl and Trakt...")
+        print("[6] Creating import files (Letterboxd, Simkl, Trakt, IMDb, JSON)...")
         run_exports(lib, output_dir / "exports", ALL_PLATFORMS, log=lambda m: print(m))
 
     return lib

@@ -19,11 +19,13 @@ the backup again.
 
 ## Which platform gets what
 
-| Platform   | Movies | Series | Per-episode history |
-|------------|--------|--------|---------------------|
-| Letterboxd | Yes    | No (films only) | n/a |
-| Simkl      | Yes    | Yes, with status and last-episode-watched | Reconstructed from your counts |
-| Trakt      | Yes    | Added to watchlist | Only the episodes the backup recorded |
+| Platform       | Movies | Series | Per-episode history |
+|----------------|--------|--------|---------------------|
+| Letterboxd     | Yes    | No (films only) | n/a |
+| Simkl          | Yes    | Yes, with status and last-episode-watched | Reconstructed from your counts |
+| Trakt          | Yes    | Added to watchlist | Only the episodes the backup recorded |
+| IMDb           | Yes (ratings + watchlist) | No (no IMDb ids for series) | n/a |
+| Universal JSON | Yes    | Yes    | Full status where known (null otherwise) |
 
 Movies transfer cleanly everywhere because we have IMDb ids, watched dates,
 ratings and rewatch flags.
@@ -53,6 +55,15 @@ Trakt (`exports/trakt`):
 - `trakt_sync.json` - everything in Trakt's sync-API shape
 - `trakt_movies_history.csv`, `trakt_movies_watchlist.csv`, `trakt_movies_ratings.csv`
 - `trakt_shows_watchlist.csv`, `trakt_episodes_history.csv`
+
+IMDb (`exports/imdb`):
+- `imdb_ratings.csv` - films you rated, in IMDb's export layout
+- `imdb_watchlist.csv` - films on your watchlist
+- Also usable as a generic "IMDb CSV" import source for the other services.
+
+Universal JSON (`exports/json`):
+- `tvtime_library.json` - one clean, documented JSON of everything, for building
+  your own importer. Its README describes the schema.
 
 ## Privacy
 

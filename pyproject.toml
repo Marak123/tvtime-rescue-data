@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tvtime-rescue"
-version = "0.1.3"
+version = "0.1.4"
 description = "Recover your TV Time library and watch history from a local iOS backup, browse it, and export it to Trakt, Letterboxd and Simkl."
 readme = "README.md"
 license = { text = "MIT" }

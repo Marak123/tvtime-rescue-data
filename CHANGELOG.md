@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.4
+
+- Two more export targets:
+  - IMDb: ratings and watchlist CSVs in IMDb's own layout (films only). These
+    also work as a universal "IMDb CSV" that Letterboxd, Simkl and Trakt accept.
+  - Universal JSON: one clean, documented JSON file of everything (movies and
+    series with per-episode status), for building your own importer.
+- `export` and `recover` now produce all five targets by default.
+
 ## 0.1.3
 
 - Export your library to other platforms. New `export` command writes ready-to-

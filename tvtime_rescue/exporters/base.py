@@ -87,14 +87,18 @@ def last_watched_episode(series: dict) -> str:
     return ""
 
 
-def run_exports(lib: dict, out_dir: Path, platforms=("letterboxd", "simkl", "trakt"),
+def run_exports(lib: dict, out_dir: Path,
+                platforms=("letterboxd", "simkl", "trakt", "imdb", "json"),
                 log=print) -> dict:
     """Run the requested exporters. Imported lazily to avoid circular imports."""
+    from .imdb import export_imdb
+    from .json_export import export_json
     from .letterboxd import export_letterboxd
     from .simkl import export_simkl
     from .trakt import export_trakt
 
-    funcs = {"letterboxd": export_letterboxd, "simkl": export_simkl, "trakt": export_trakt}
+    funcs = {"letterboxd": export_letterboxd, "simkl": export_simkl, "trakt": export_trakt,
+             "imdb": export_imdb, "json": export_json}
     results = {}
     for name in platforms:
         fn = funcs.get(name)
