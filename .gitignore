@@ -20,6 +20,9 @@ TVTime-Recovered-EN/
 raw_files/
 raw_json/
 tvdb_cache/
+exports/
+library.json
+release/
 *.db
 Manifest.plist
 Info.plist

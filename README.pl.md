@@ -23,6 +23,7 @@ Dane pochodzą z lokalnego cache aplikacji, więc odzwierciedlają to, co aplika
 - `TVTime.html` - jeden plik, który otwierasz w przeglądarce, żeby przejrzeć wszystko: plakaty, tytuły, opisy, gatunki, daty obejrzenia i postęp odcinków dla każdego serialu. Ma wyszukiwarkę, sortowanie, filtry (Filmy, Seriale, Do obejrzenia, Ulubione, Archiwum) oraz zakładkę Episodes, która pokazuje pojedyncze odcinki ze znacznikiem obejrzany / nieobejrzany tam, gdzie backup je zapisał.
 - `movies.csv`, `series.csv`, `watch_history.csv`, `episodes.csv` - arkusze, które otworzysz w Excelu lub zaimportujesz gdzie indziej (na przykład Trakt albo Serializd).
 - `TVTime-Recovered-Data.md` - krótki czytelny raport.
+- `exports/` - gotowe pliki do importu na Trakt, Letterboxd i Simkl, żeby odbudować historię na wciąż działającej usłudze (patrz niżej).
 - `raw_files/` - same pliki aplikacji wyjęte z backupu (baza danych i ustawienia), gdybyś ich potrzebował.
 
 ## Czego potrzebujesz
@@ -101,6 +102,27 @@ Jak to ustawić:
 
 Możesz też podać go w wierszu poleceń przez `--tvdb-key TWOJ_KLUCZ`, albo ustawić zmienną środowiskową `TVDB_API_KEY`. Użyj `--no-tvdb`, żeby pominąć TVDB nawet gdy klucz jest. Odpowiedzi są zapisywane w folderze `tvdb_cache` w Twoim folderze wyników, więc kolejne uruchomienie jest szybkie i nie pobiera na nowo. Nigdy nie wrzucaj pliku `.env` ani nie udostępniaj klucza.
 
+## Eksport do Trakt, Letterboxd i Simkl
+
+Każde odzyskiwanie zapisuje też pliki do importu w folderze `exports`, po jednym
+podfolderze na platformę, każdy z własnym krótkim README. Możesz je odbudować w
+dowolnej chwili z gotowego odzysku, bez ruszania backupu:
+
+```
+python run.py export --input "SCIEZKA_DO_FOLDERU_WYNIKOW"
+```
+
+- Letterboxd (tylko filmy): CSV dziennika i CSV watchlisty.
+- Simkl (filmy i seriale): jeden CSV w formacie Simkl. To najlepszy cel dla
+  seriali, bo Simkl używa tego samego modelu opartego na liczbie odcinków co TV
+  Time, więc każdy serial dostaje status i ostatni obejrzany odcinek.
+- Trakt (filmy, seriale, odcinki): JSON w formacie sync API plus pliki CSV.
+
+Filmy przenoszą się w pełni (IMDb id, data obejrzenia, ocena). Dla seriali pełny
+postęp dostaje tylko Simkl; Trakt dostaje seriale na watchliście plus te odcinki,
+które backup faktycznie zapisał. Szczegóły i kroki dla każdej platformy są w
+[docs/exporting.md](docs/exporting.md).
+
 ## Gdzie leżą backupy (jeśli chcesz znaleźć folder sam)
 
 - Windows (Apple Devices / iTunes): `%APPDATA%\Apple Computer\MobileSync\Backup` albo `%USERPROFILE%\Apple\MobileSync\Backup`
@@ -116,6 +138,25 @@ Wszystko dzieje się na Twoim komputerze. Nic nie jest wysyłane. Wyniki zawiera
 ## Jak to działa (w skrócie)
 
 TV Time to aplikacja we Flutterze. Trzyma lokalny cache odpowiedzi serwera w małej bazie SQLite o nazwie `DioCache.db` (Dio to klient HTTP, którego używa). Te odpowiedzi to czysty JSON i zawierają Twoją bibliotekę, postęp odcinków per serial oraz historię oglądania. Narzędzie kopiuje `DioCache.db` z backupu, czyta ten JSON i zamienia go na arkusze i stronę. Dla backupów niezaszyfrowanych czyta pliki bezpośrednio; dla zaszyfrowanych używa hasła backupu, żeby je odszyfrować.
+
+## Układ projektu
+
+Kod jest podzielony na trzy samodzielne narzędzia w `tvtime_rescue`:
+
+- `extract/` - czyta backup, parsuje `DioCache.db` i opcjonalnie wzbogaca z
+  TheTVDB. Tworzy `library.json` i pliki CSV.
+- `viewer/` - zamienia `library.json` w stronę HTML w jednym pliku.
+- `exporters/` - konwertuje `library.json` na pliki do importu na inne platformy
+  (`letterboxd.py`, `simkl.py`, `trakt.py`).
+
+Komunikują się tylko przez `library.json`, więc viewer i eksportery działają
+niezależnie:
+
+```
+python run.py recover   # czyta backup i buduje wszystko (domyślne)
+python run.py export     --input FOLDER_WYNIKOW   # odbuduj pliki do importu
+python run.py site       --input FOLDER_WYNIKOW   # odbuduj stronę HTML
+```
 
 ## Zbuduj program samodzielnie
 

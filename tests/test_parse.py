@@ -14,7 +14,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from tvtime_rescue.parse import parse_library  # noqa: E402
+from tvtime_rescue.extract.parse import parse_library  # noqa: E402
 
 
 def _make_fake_diocache(path: Path) -> None:

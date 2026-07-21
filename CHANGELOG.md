@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.3
+
+- Export your library to other platforms. New `export` command writes ready-to-
+  import files for:
+  - Letterboxd (movies): a diary CSV and a watchlist CSV.
+  - Simkl (movies and series): one CSV in Simkl's format, with per-series status
+    and last-episode-watched mapped from your episode counts. Best fit for TV.
+  - Trakt (movies, series, episodes): a sync-API JSON plus per-list CSV files.
+- The recover command now also writes `library.json` and, unless `--no-export`
+  is passed, builds all three export sets automatically.
+- Project reorganised into clear tools: `tvtime_rescue/extract` (read the
+  backup), `tvtime_rescue/viewer` (build the HTML page), and
+  `tvtime_rescue/exporters` (platform converters). The exporters read
+  `library.json`, so they run independently of extraction.
+- New subcommands: `recover` (default), `export`, and `site` (rebuild the page).
+
 ## 0.1.2
 
 - Optional enrichment from TheTVDB. Add a free API key in a `.env` file

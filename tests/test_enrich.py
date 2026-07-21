@@ -7,7 +7,7 @@ import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from tvtime_rescue import enrich  # noqa: E402
+from tvtime_rescue.extract import enrich  # noqa: E402
 
 
 class FakeClient:
